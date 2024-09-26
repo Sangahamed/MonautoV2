@@ -1,0 +1,113 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Product;
+use Illuminate\Http\Request;
+use Intervention\Image\ImageManager;
+
+class ProductController extends Controller
+{
+    public function index()
+    {
+        $products = Product::all();
+        return view('products.index', compact('products'));
+    }
+
+    public function create()
+    {
+        return view('products.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|max:255',
+            'description' => 'required|max:1000',
+            'images' => 'required|array|max:5',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $product = new Product;
+        $product->name = $request->input('name');
+        $product->description = $request->input('description');
+
+        $product->save();
+
+        // Enregistrer les images
+        $imageManager = new ImageManager();
+        foreach ($request->file('images') as $imageFile) {
+            $fileName = time() . '_' . $imageFile->getClientOriginalName();
+            $imageManager->make($imageFile)->resize(500, null, function ($constraint) {
+                $constraint->aspectRatio();
+            })->save(storage_path('app/public/product-images/' . $fileName));
+
+            $product->images()->create([
+                'path' => 'product-images/' . $fileName,
+            ]);
+        }
+
+        return redirect()->route('products.index')->with('success', 'Produit créé avec succès !');
+    }
+
+    public function edit(Product $product)
+    {
+        return view('products.edit', compact('product'));
+    }
+
+    public function update(Request $request, Product $product)
+    {
+        $request->validate([
+            'name' => 'required|max:255',
+            'description' => 'required|max:1000',
+            'images' => 'nullable|array|max:5',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $product->name = $request->input('name');
+        $product->description = $request->input('description');
+
+        $product->save();
+
+        // Supprimer les anciennes images si nécessaire
+        if ($request->input('remove_images')) {
+            foreach ($request->input('remove_images') as $imageId) {
+                $image = $product->images()->find($imageId);
+                if ($image) {
+                    \Storage::delete($image->path);
+                    $image->delete();
+                }
+            }
+        }
+
+        // Enregistrer les nouvelles images
+        if ($request->hasFile('images')) {
+            $imageManager = new ImageManager();
+            foreach ($request->file('images') as $imageFile) {
+                $fileName = time() . '_' . $imageFile->getClientOriginalName();
+                $imageManager->make($imageFile)->resize(500, null, function ($constraint) {
+                    $constraint->aspectRatio();
+                })->save(storage_path('app/public/product-images/' . $fileName));
+
+                $product->images()->create([
+                    'path' => 'product-images/' . $fileName,
+                ]);
+            }
+        }
+
+        return redirect()->route('products.index')->with('success', 'Produit mis à jour avec succès !');
+    }
+
+    public function destroy(Product $product)
+    {
+        // Supprimer les images du produit
+        foreach ($product->images as $image) {
+            \Storage::delete($image->path);
+            $image->delete();
+        }
+
+        $product->delete();
+
+        return redirect()->route('products.index')->with('success', 'Produit supprimé avec succès !');
+    }
+}

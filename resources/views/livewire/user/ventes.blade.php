@@ -1,0 +1,52 @@
+<div>
+    
+    <div class="product-wrap">
+        <div class="product-list">
+
+            <ul class="row">
+                @forelse ($vendres as $item)
+                    
+                
+                <li class="col-lg-4 col-md-6 col-sm-12">
+                    <div class="product-box">
+                        <div class="producct-img"> 
+                            <?php 
+                                $ventesImages = json_decode($item->imagevehiculevente, true); // Décoder si nécessaire
+                                $firstImage = $ventesImages[0] ?? null; // Récupérer la première image
+                            ?>
+                             @if ($firstImage)
+                            <img src="/images/Vendre/{{ $firstImage }}" alt="">
+                            @else
+                            @endif
+                        </div>
+                        <div class="product-caption">
+                            <h4><a href="#">{{ $item->modele }}</a></h4>
+                            <h4><a href="#">{{ $item->subcategory }}</a></h4>
+                            <div class="price">
+                                <ins>{{ $item->prix }} Francs CFA</ins>
+                            </div>
+                            <div class="btn-group">
+                                <a href="{{ route('user.vendre.edit-vendre',['idVendre' => $item->idVendre]) }}" class="btn btn-outline-primary btn-sm">Modifier</a>
+                                <a href="javascript:;" data-id="{{ $item->id }}" id="deleteVendreBtn" class="btn btn-outline-danger btn-sm">Supprimer</a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                @empty
+                    <li class="col-12">
+                       <span class="text-danger">Vous avez pas de vehicule</span>
+                    </li>
+                @endforelse
+            </ul>
+
+        </div>
+        <div class="blog-pagination mb-30">
+            <div class="btn-toolbar justify-content-center mb-15">
+                <div class="btn-group">
+                   {{ $vendres->links('livewire::simple-bootstrap') }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

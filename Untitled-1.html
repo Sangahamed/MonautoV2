@@ -1,0 +1,16 @@
+<div class="file-upload-previews">
+    <?php 
+        $ventesImages = json_decode($vendre->imagevehiculevente, true); // Décoder si nécessaire
+        
+    ?>
+    <div class="MultiFile-label">
+        <a class="MultiFile-remove" href="#MultiFile1">x</a>
+        <span>
+        <?php foreach ($ventesImages as $key => $images) : ?>
+        <span class="MultiFile-label" title="File selected: {{ $images }}">
+        <span class="MultiFile-title">{{ $images }}</span>
+        <img class="MultiFile-preview" style="max-height:100px; max-width:100px;" src="/images/Vendre/{{ $images }}"></span>,
+        <?php endforeach; ?>
+        </span>
+    </div>
+</div>

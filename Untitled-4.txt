@@ -1,0 +1,18 @@
+@forelse ($locations as $item)
+    <?php
+        $locationImages = json_decode($item->location_images, true); // Décoder si nécessaire
+    ?>
+
+    <div class="location-card">
+        <div class="image-gallery">
+            @foreach ($locationImages as $image)
+                <img src="/public/images/locations/{{ $image }}" alt="Image de l'emplacement">
+            @endforeach
+        </div>
+
+        <div class="location-details">
+            </div>
+    </div>
+@empty
+    <p class="no-locations">Aucun emplacement trouvé.</p>
+@endforelse

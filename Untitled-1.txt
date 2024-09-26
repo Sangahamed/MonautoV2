@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Auth;
+
+class AuthController extends Controller
+{
+  public function login(Request $request)
+  {
+    // Déterminer le type de champ de connexion (email ou nom d'utilisateur)
+    $fieldType = filter_var($request->login_id, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+    // Valider l'identifiant de connexion (requis, existe dans la table des utilisateurs)
+    $request->validate([
+      'login_id' => 'required|exists:users,' . $fieldType,
+      'password' => 'required|min:5|max:45'
+    ], [
+      'login_id.required' => 'L'email ou le nom d'utilisateur est requis.',
+      'login_id.exists' => 'L'email ou le nom d'utilisateur n'existe pas dans le système.',
+      'password.required' => 'Le mot de passe est requis'
+    ]);
+
+    // Préparer les informations d'identification pour l'authentification
+    $creds = [
+      $fieldType => $request->login_id,
+      'password' => $request->password
+    ];
+
+    // Tenter l'authentification en utilisant la façade Auth de Laravel
+    if (Auth::guard('user')->attempt($creds)) {
+      $user = Auth::user();
+
+      // Vérifier le statut de la vérification par email
+      if (!$user->verified) {
+        Auth::logout(); // Déconnexion si l'email n'est pas vérifié
+        return redirect()->route('user.login')->with('fail', 'Votre compte n'est pas vérifié. Vérifiez votre email et cliquez sur le lien pour le confirmer.');
+      }
+
+      // Implémenter la limitation du nombre de tentatives de connexion
+      $loginAttempts = Cache::get('login_attempts_' . $user->id, 0);
+
+      if (RateLimiter::tooManyAttempts('login_' . $user->id, 5, 60)) {
+        return response()->json(['error' => 'Trop de tentatives de connexion. Veuillez réessayer plus tard.'], 429);
+      }
+
+      // Vérifier le mot de passe en utilisant password_hash()
+      if (!password_verify($request->password, $user->password)) {
+        $loginAttempts++;
+        Cache::put('login_attempts_' . $user->id, $loginAttempts, 60);
+
+        if ($loginAttempts >= 3) {
+          $user->is_active = false; // Bloquer l'utilisateur temporairement
+          $user->save();
+
+          // TODO: Envoyer une notification par email et bloquer l'IP (implémentation non illustrée)
+          Log::warning('Tentatives de connexion suspectes pour l\'utilisateur ' . $user->id . ' depuis l\'IP ' . $request->getClientIp());
+        }
+
+        return response()->json(['error' => 'Mot de passe incorrect.'], 401);
+      }
+
+      // Connexion réussie, mettre à jour les informations sur l'appareil de l'utilisateur
+      $user->setLastLoginAt(now());
+      $user->setLastLoginIp($request->getClientIp());
+      // ... (autres informations sur l'appareil)
+      $user->save();
+
+      // Créer un jeton d'authentification pour l'utilisateur
+      $token = auth()->create($user);
+
+      return response()->json([
+        'token' => $token,
+        'user' => $user
+      ]);
+    } else {
+      // Échec de la connexion, renvoyer un message d'erreur
+      return redirect()->route('user.login')->withInput()->with('fail', 'Mot de passe incorrect.');
+    }
+  }
+}

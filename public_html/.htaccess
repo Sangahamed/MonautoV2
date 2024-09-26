@@ -1,0 +1,27 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect all requests to the Laravel public folder
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ /public/$1 [L,QSA]
+    
+        # php -- END cPanel-generated handler, do not edit
+    RewriteRule ^public/Landing$ https://www.monauto.ci/ [R=301,L]
+    
+    # Redirige /public/Landing/dist vers la page d'accueil
+    RewriteRule ^public/Landing/dist$ https://www.monauto.ci/ [R=301,L]
+</IfModule>
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php83” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php83 .php .php8 .phtml
+</IfModule>
+
+RewriteCond %{HTTP_HOST} ^monauto\.ci$ [OR]
+RewriteCond %{HTTP_HOST} ^www\.monauto\.ci$
+RewriteRule ^www\.monauto\.ci\/public\/Landing$ "https\:\/\/www\.monauto\.ci\/" [R=301,L]
+RewriteCond %{HTTP_HOST} ^monauto\.ci$ [OR]
+RewriteCond %{HTTP_HOST} ^www\.monauto\.ci$
+RewriteRule ^www\.monauto\.ci\/public\/Landing\/dist$ "https\:\/\/www\.monauto\.ci\/" [R=301,L]
+

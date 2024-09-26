@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreur 404 - Page Introuvable</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 4em;
+            color: #e74c3c;
+        }
+        p {
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+        .links a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Erreur 404</h1>
+        <p>La page que vous recherchez est introuvable.</p>
+        <!--#echo var="REQUEST_URI" --><!--#echo var="REDIRECT_STATUS" -->
+        <p>Vous pouvez revenir à la <a href="/">page d'accueil</a> ou utiliser la barre de recherche ci-dessous :</p>
+        <form action="/search" method="get">
+            <input type="text" name="query" placeholder="Rechercher sur notre site..." required>
+            <input type="submit" value="Rechercher">
+        </form>
+        <div class="links">
+            <p>Ou visitez les pages suivantes :</p>
+            <ul>
+                <li><a href="/">Page d'accueil</a></li>
+                <li><a href="/about">À propos de nous</a></li>
+                <li><a href="/contact">Contactez-nous</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
